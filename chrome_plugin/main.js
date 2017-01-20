@@ -1,7 +1,14 @@
 KC = {
   config: {
-    do_replace_kingdom_text: Boolean(window.localStorage['kc.config.do_replace_kingdom_text'] || true),
-    replace_kingdom_text_frequency: Number(window.localStorage['kc.config.replace_kingdom_text_frequency'] || 5000)
+    kingdom_text: true,
+	show_journey: true,
+    redraw_frequency: 5000
+  },
+  
+  updated: {
+	kingdom_text: false,
+	show_journey: false,
+	redraw_frequency: false
   },
   
   angular_debug_check: function() {
@@ -15,12 +22,12 @@ KC = {
 
   initialize: function() {
 	KC.angular_debug_check();
-    KC.replace_kingdom_text();
+	KC.load_preferences();
+	KC.redraw();
   },
 
   replace_kingdom_text: function() {
-    if (KC.config.do_replace_kingdom_text) {
-	  //console.log('replace_kingdom_text');
+    if (KC.config.kingdom_text) {
       $('.modded-text-overlay').remove();
 
       $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
@@ -28,14 +35,39 @@ KC = {
         a.append(LANGUAGE.getCardText[angular.element(e).scope().pile.topCardName]);
         $(e).append(a);
       });
-      setTimeout(KC.replace_kingdom_text, KC.config.replace_kingdom_text_frequency);
-    } else {
-      $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => {
-        e.css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName));
-      });
+    } else if (KC.updated.kingdom_text) {
+      $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => e.css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName)));
+	  KC.updated.kingdom_text = false;
     }
+  },
+  
+  display_journey_token: function() {
+	if (KC.config.show_journey) {
+	  // TODO: Render journey token
+	} else if (KC.updated.show_journey) {
+	  // Remove token if config is not set to show
+	}
+  },
+  
+  update_preference: function(name, new_value) {
+	if (KC.config[name] != new_value) {
+		KC.config[name] = new_value;
+		KC.updated[name] = true;
+		localStorage['kc.config'] = KC.config;
+	}
+  },
+  
+  load_preferences: function() {
+	if (localStorage['kc.config']) {
+	  KC.config = JSON.parse(localStorage['kc.config']);
+	}
+  },
+  
+  redraw: function() {
+	KC.replace_kingdom_text();
+	KC.display_journey_token();
+	setTimeout(KC.redraw, KC.config.redraw_frequency);
   }
 };
 
 KC.initialize();
-//console.log(KingsCourtier);
