@@ -4,8 +4,8 @@ function load_scripts(script_list) {
 	s.src = chrome.extension.getURL(name);
 	
 	var remove_self = function() {
-		console.log('Remove self');
-		console.log(remove_self['script_list']);
+		//console.log('Remove self');
+		//console.log(remove_self['script_list']);
 		var script_list = remove_self['script_list'] || [];
 		if (script_list.length > 0) {
 			load_scripts(script_list);

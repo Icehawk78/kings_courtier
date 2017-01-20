@@ -20,7 +20,7 @@ KC = {
 
   replace_kingdom_text: function() {
     if (KC.config.do_replace_kingdom_text) {
-	  console.log('replace_kingdom_text');
+	  //console.log('replace_kingdom_text');
       $('.modded-text-overlay').remove();
 
       $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
