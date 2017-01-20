@@ -1,7 +1,7 @@
-KingsCourtier = {
+KC = {
   config: {
-    do_replace_kingdom_text: Boolean(window.localStorage['kc.config.do_replace_kingdom_text'] || true);
-    replace_kingdom_text_frequency: Number(window.localStorage['kc.config.replace_kingdom_text_frequency'] || 5000);
+    do_replace_kingdom_text: Boolean(window.localStorage['kc.config.do_replace_kingdom_text'] || true),
+    replace_kingdom_text_frequency: Number(window.localStorage['kc.config.replace_kingdom_text_frequency'] || 5000)
   },
   
   angular_debug_check: function() {
@@ -14,12 +14,13 @@ KingsCourtier = {
   },
 
   initialize: function() {
-    replace_kingdom_text();
+	KC.angular_debug_check();
+    KC.replace_kingdom_text();
   },
 
   replace_kingdom_text: function() {
-    var self = this;
-    if (this.config.do_replace_kingdom_text) {
+    if (KC.config.do_replace_kingdom_text) {
+	  console.log('replace_kingdom_text');
       $('.modded-text-overlay').remove();
 
       $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
@@ -27,7 +28,7 @@ KingsCourtier = {
         a.append(LANGUAGE.getCardText[angular.element(e).scope().pile.topCardName]);
         $(e).append(a);
       });
-      setTimeout(self.replace_kingdom_text, self.config.replace_kingdom_text_frequency);
+      setTimeout(KC.replace_kingdom_text, KC.config.replace_kingdom_text_frequency);
     } else {
       $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => {
         e.css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName));
@@ -36,4 +37,5 @@ KingsCourtier = {
   }
 };
 
-KingsCourtier.initialize();
+KC.initialize();
+//console.log(KingsCourtier);
