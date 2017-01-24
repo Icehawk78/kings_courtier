@@ -38,7 +38,7 @@ KC = {
                 $(e).append(a);
             });
         } else if (KC.updated.kingdom_text) {
-            $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => e.css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName)));
+            $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => $(e).css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName)));
             KC.updated.kingdom_text = false;
         }
     },
