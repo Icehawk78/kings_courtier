@@ -2,12 +2,14 @@ KC = {
     config: {
         kingdom_text: true,
         show_journey: true,
+        show_repeat:  true,
         redraw_frequency: 5000
     },
 
     updated: {
         kingdom_text: false,
         show_journey: false,
+        show_repeat:  false,
         redraw_frequency: false
     },
 
@@ -57,6 +59,23 @@ KC = {
         }
     },
 
+    set_kingdom_repeat: function() {
+        if (publicTableService && activeGame.getSupply()) {
+            var kingdom = activeGame.getSupply().landscapes.map(c => c.cardName).concat(activeGame.getSupply().piles.kingdom.map(p => p.pileName))
+            publicTableService.changeRule(new TableRule(TableRuleIds.REQUIRED_CARDS, -1, kingdom));
+        }
+    },
+
+    display_repeat_button: function() {
+        if (KC.config.show_repeat) {
+            if ($('score-table-buttons').length > 0) {
+                var repeat_button = $('<button class="lobby-button kc-repeat-kingdom" onclick="KC.set_kingdom_repeat()">Repeat Kingdom</button>');
+                $('.kc-repeat-kingdom').remove();
+                $('score-table-buttons .table-buttons').append(repeat_button);
+            }
+        }
+    },
+
     update_preference: function (name, new_value) {
         if (KC.config[name] != new_value) {
             KC.config[name] = new_value;
@@ -67,7 +86,8 @@ KC = {
 
     load_preferences: function () {
         if (localStorage['kc.config']) {
-            KC.config = JSON.parse(localStorage['kc.config']);
+            KC.config = Object.assign(KC.config, JSON.parse(localStorage['kc.config']));
+            localStorage['kc.config'] = JSON.stringify(KC.config);
         }
     },
 
@@ -75,6 +95,8 @@ KC = {
         if (activeGame._isActive) {
             KC.replace_kingdom_text();
             KC.display_journey_token();
+        } else if (publicTableService && publicTableService.heroIsHost()) {
+            KC.display_repeat_button();
         }
         setTimeout(KC.redraw, KC.config.redraw_frequency);
     }
