@@ -12,6 +12,8 @@ KC = {
         kingdom_text: true,
         show_journey: true,
         show_repeat:  true,
+        sticky_table_rules: true,
+        previous_rules: {},
         redraw_frequency: 5000
     },
 
@@ -19,6 +21,7 @@ KC = {
         kingdom_text: false,
         show_journey: false,
         show_repeat:  false,
+        sticky_table_rules: false,
         redraw_frequency: false
     },
 
@@ -95,6 +98,12 @@ KC = {
                 $('.kc-repeat-kingdom').remove();
                 $('score-table-buttons .table-buttons').append(repeat_button);
             }
+        }
+    },
+
+    set_table_rules: function() {
+        if (KC.sticky_table_rules && publicTableService.heroIsHost()) {
+
         }
     },
 
