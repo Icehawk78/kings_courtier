@@ -1,4 +1,13 @@
 KC = {
+    styles: {
+        'journey-token-down-container': [
+            'min-width: 130px',
+            'min-height: 130px',
+            'float: left',
+            'border-radius: 130px'
+        ]
+    },
+
     config: {
         kingdom_text: true,
         show_journey: true,
@@ -22,9 +31,16 @@ KC = {
         }
     },
 
+    add_styles: function () {
+        $('<style>').prop('type', 'text/css').html(
+            Object.keys(KC.styles).map(k => '.' + k + " {\n" + KC.styles[k].join(";\n") + '}').join("\n")
+        ).appendTo('head');
+    },
+
     initialize: function () {
         KC.angular_debug_check();
         KC.load_preferences();
+        KC.add_styles();
         KC.redraw();
     },
 
@@ -47,11 +63,17 @@ KC = {
         if (KC.config.show_journey) {
             var journeyTokens = activeGame.state.tokens.filter(t => t.tokenName == TokenNames.JOURNEY);
             if (journeyTokens.length > 0) {
-                var counters = $('.opponent-counters');
-                counters.forEach(c => {
+                $('.custom-token').remove();
+                var counters = $('.opponent-counters').toArray().forEach(c => {
                     var scope = angular.element(c).scope();
                     var player = scope.hero || scope.opponent;
                     var token = journeyTokens.find(t => t.owner == player.index);
+                    var tokenDiv = $('<div class="journey-token-container custom-token" style="background-color: ' + getByOrdinal(PlayerColors, player.index).toString() + '"></div>');
+                    $(c).append(tokenDiv);
+                    tokenDiv.css('border-radius', tokenDiv.css('min-height'));
+                    if (token.isFlipped) {
+                        tokenDiv.toggleClass('journey-token-container').toggleClass('journey-token-down-container')
+                    }
                 });
             }
         } else if (KC.updated.show_journey) {
@@ -61,7 +83,7 @@ KC = {
 
     set_kingdom_repeat: function() {
         if (publicTableService && activeGame.getSupply()) {
-            var kingdom = activeGame.getSupply().landscapes.map(c => c.cardName).concat(activeGame.getSupply().piles.kingdom.map(p => p.pileName))
+            var kingdom = activeGame.getSupply().landscapes.map(c => c.cardName).concat(activeGame.getSupply().piles.kingdom.map(p => p.pileName));
             publicTableService.changeRule(new TableRule(TableRuleIds.REQUIRED_CARDS, -1, kingdom));
         }
     },
