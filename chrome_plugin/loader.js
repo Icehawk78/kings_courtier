@@ -17,5 +17,5 @@ function load_scripts(script_list) {
 	(document.head || document.documentElement).appendChild(s);
 }
 
-script_list = ['jquery-3.1.1.slim.min.js', 'main.js'];
+script_list = ['jquery-3.1.1.slim.min.js', 'lodash.js', 'main.js'];
 load_scripts(script_list);
