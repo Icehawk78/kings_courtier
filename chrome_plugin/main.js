@@ -53,7 +53,7 @@ KC = {
 
             $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
                 var a = $('<div class="modded-text-overlay" style="z-index: 100; position: absolute; left: 3%; top: 5%; min-width: 287px; text-align: center; min-height: 170px;">');
-                a.append(KC.card_text(angular.element(e).scope().pile.topCardName));
+                a.append(KC.card_text(angular.element(e).scope().pile.topCard));
                 $(e).append(a);
             });
         } else if (KC.updated.kingdom_text) {
@@ -197,7 +197,7 @@ function card_display(card, amount, position) {
         '<div class="full-card-border" />' +
         '<div class="new-card-counter-container" style="top:0px; left:0px;">' +
             '<div class="new-card-counter-text-container" style="top: 50%">' +
-                '<div class="new-card-counter-text" style="left: -50%">' + amount + '</div>'
+                '<div class="new-card-counter-text" style="left: -50%">' + amount + '</div>' +
             '</div>' +
         '</div>';
 }
