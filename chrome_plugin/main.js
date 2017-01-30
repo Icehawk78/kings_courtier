@@ -53,7 +53,7 @@ KC = {
 
             $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
                 var a = $('<div class="modded-text-overlay" style="z-index: 100; position: absolute; left: 3%; top: 5%; min-width: 287px; text-align: center; min-height: 170px;">');
-                a.append(LANGUAGE.getCardText[angular.element(e).scope().pile.topCardName]);
+                a.append(KC.card_text(angular.element(e).scope().pile.topCardName));
                 $(e).append(a);
             });
         } else if (KC.updated.kingdom_text) {
@@ -102,8 +102,11 @@ KC = {
     },
 
     set_table_rules: function() {
-        if (KC.sticky_table_rules && publicTableService.heroIsHost()) {
-
+        if (KC.config.sticky_table_rules && publicTableService.heroIsHost()) {
+            // var table = publicTableService.getTable();
+            Object.keys(KC.config.previous_rules).forEach(r_id => {
+                publicTableService.changeRule(new TableRule(TableRuleIds[r_id], KC.config.previous_rules[r_id]));
+            });
         }
     },
 
@@ -127,10 +130,136 @@ KC = {
             KC.replace_kingdom_text();
             KC.display_journey_token();
         } else if (publicTableService && publicTableService.heroIsHost()) {
+            KC.set_table_rules();
             KC.display_repeat_button();
         }
         setTimeout(KC.redraw, KC.config.redraw_frequency);
+    },
+
+    card_lists: function() {
+        return activeGame.model.players.map(p => {
+            return {
+                name: p.name,
+                cards: _.chain(activeGame.state.zones)
+                    .filter(z => z.owner == p.index)
+                    .flatMap(z => z.cards)
+                    .map(id => activeGame.getCardNameById(id))
+                    .sortBy(c => c.name)
+                    .groupBy(c => c.name)
+                    .value()
+            }
+        });
+    },
+
+    card_text: function(card) {
+        var t = LANGUAGE.getCardText[card.cardName];
+        if (!(t.indexOf('"card-text"') > -1)) {
+            var n = getNumberOfLines(t);
+            t = setTopOffset(t, getDefaultTopOffset(n))
+        }
+        return t;
     }
 };
 
 KC.initialize();
+
+function card_display(card, amount, position) {
+    return '<div class="KC-card-display full-card unselectable" style="z-index: 1000; left: ' + position.left + 'px; top: ' + position.top + 'px; transform: scale(' + position.scale +');">' +
+        '<div class="ng-scope">' +
+            '<div class="full-card-template" style="background-image: url(' + card.fullView.templateURL + ')" />' +
+            '<div class="full-card-art" style="background-image: url(' + card.fullView.artURL + '); top: ' + card.fullView.artTopOffsetInPercent + '%;" />' +
+            coin_production(card) +
+            '<div class="card-name-container" style="top: ' + card.fullView.titleTopOffset + 'px;">' +
+                '<div class="card-name unselectable" style="font-size: ' + card.fullView.titleFontSize + 'em;">' + card.cardName.name + '</div>' +
+            '</div>' +
+            '<div class="card-text-container">' +
+                card_text(card.cardName) +
+            '</div>' +
+            '<div class="bottom-bar-full" style="width: ' + card.fullView.bottomBarWidthPercentage + '%; bottom: ' + card.fullView.bottomBarBottomOffset + 'px;">' +
+                '<div class="cost-container-full">' +
+                    cost_text(card) +
+                '</div>' +
+                '<div class="bottom-right-container-full">' +
+                    vp_text(card) +
+                '</div>' +
+                '<div class="types-text-full unselectable" style="font-size: ' + card.fullView.typesFontSize + 'em; top: ' + card.fullView.typesTopOffset + 'px;">' + card.typeString + '</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="full-card-border" />' +
+        '<div class="new-card-counter-container" style="top:0px; left:0px;">' +
+            '<div class="new-card-counter-text-container" style="top: 50%">' +
+                '<div class="new-card-counter-text" style="left: -50%">' + amount + '</div>'
+            '</div>' +
+        '</div>';
+}
+
+function coin_production(card) {
+    var res = '';
+    if (card.cardName.isTreasure()) {
+        res = '<div class="' + coin_potion_class(card) + '-production-container">' +
+            '<div class="' + coin_potion_class(card) + '-production-container">' +
+                '<div class="' + coin_potion_class(card) + '-production-left"  style="top:' + card.fullView.coinTopOffset + 'px;">' +
+                    coin_prod_text(card) +
+                '</div>' +
+                '<div class="' + coin_potion_class(card) + '-production-right" style="top:' + card.fullView.coinTopOffset + 'px;">' +
+                    coin_prod_text(card) +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    }
+    return res;
+}
+
+function cost_text(card) {
+    var res = '';
+    if (card.cardName.cost.shouldShowCoinCost()) {
+        res += '<div class="coin-cost-full">' +
+                '<div class="coin-cost-full-text" style="top:12px;">' + card.cardName.cost.effectiveCoinCost +'</div>' +
+            '</div>';
+    }
+    if (card.cardName.cost.shouldShowPotionCost()) {
+        res += '<div class="potion-cost-full" />';
+    }
+    if (card.cardName.cost.shouldShowDebtCost()) {
+        res += '<div class="debt-cost-full">' +
+                '<div class="debt-cost-full-text" style="top:12px;">' + card.cardName.cost.debt + '</div>' +
+            '</div>';
+    }
+    return res;
+}
+
+function vp_text(card) {
+    var res = '';
+    if (card.cardName.isBasicVictory()) {
+        res = '<div class="vp-amount-bottom-full">' +
+                '<div class="vp-icon-botton-full"></div>' +
+                '<div class="vp-text-bottom-full unselectable">' + card.cardName.vp + '</div>' +
+            '</div>'
+    } else {
+        res = '<div class="expansion-icon-bottom-full" style="background-image: url(' + card.fullView.expansionIconURL + ');"/>'
+    }
+    return res;
+}
+
+function card_text(card) {
+    var t = LANGUAGE.getCardText[card.cardName];
+    if (!(t.indexOf('"card-text"') > -1)) {
+        var n = getNumberOfLines(t);
+        t = setTopOffset(t, getDefaultTopOffset(n))
+    }
+    return t;
+}
+
+function coin_potion_class(card) {
+    return card.cardName.coinProduction.potion < 1 ? 'treasure' : 'potion';
+}
+
+function coin_prod_text(card) {
+    var res = '';
+    if (card.cardName.coinProduction.potion < 1) {
+        res = '<div class="coin-production-text-container">' +
+            '<div class="coin-production-text" style="top:12px;">' + card.cardName.coinProduction.coin + '</div>' +
+            '</div>';
+    }
+    return res;
+}
