@@ -64,18 +64,27 @@ KC = {
 
     display_journey_token: function () {
         if (KC.config.show_journey) {
+            $('.custom-token').remove();
             var journeyTokens = activeGame.state.tokens.filter(t => t.tokenName == TokenNames.JOURNEY);
-            if (journeyTokens.length > 0) {
-                $('.custom-token').remove();
+            var minusCoinTokens = activeGame.state.tokens.filter(t => t.tokenName == TokenNames.MINUS_COIN);
+            if (journeyTokens.length > 0 || minusCoinTokens.length > 0) {
                 var counters = $('.opponent-counters').toArray().forEach(c => {
                     var scope = angular.element(c).scope();
+                    var element = $(c);
                     var player = scope.hero || scope.opponent;
-                    var token = journeyTokens.find(t => t.owner == player.index);
-                    var tokenDiv = $('<div class="journey-token-container custom-token" style="background-color: ' + getByOrdinal(PlayerColors, player.index).toString() + '"></div>');
-                    $(c).append(tokenDiv);
-                    tokenDiv.css('border-radius', tokenDiv.css('min-height'));
-                    if (token.isFlipped) {
-                        tokenDiv.toggleClass('journey-token-container').toggleClass('journey-token-down-container')
+                    var jToken = journeyTokens.find(t => t.owner == player.index);
+                    var cToken = minusCoinTokens.find(t => t.owner == player.index);
+                    if (jToken) {
+                        var tokenDiv = $('<div class="journey-token-container custom-token" style="background-color: ' + getByOrdinal(PlayerColors, player.index).toString() + '"></div>');
+                        element.append(tokenDiv);
+                        tokenDiv.css('border-radius', tokenDiv.css('min-height'));
+                        if (jToken.isFlipped) {
+                            tokenDiv.toggleClass('journey-token-container').toggleClass('journey-token-down-container')
+                        }
+                    }
+                    if (cToken && activeGame.state.zones[cToken.zone].zoneName != ZoneNames.TOKEN_LIMBO) {
+                        var tokenDiv = $('<div class="minus-coin-token custom-token"><div class="minus-coin-token-text">-1</div></div>');
+                        element.append(tokenDiv);
                     }
                 });
             }
