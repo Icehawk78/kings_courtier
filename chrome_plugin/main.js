@@ -9,10 +9,10 @@ KC = {
     },
 
     config: {
-        kingdom_text: true,
-        show_journey: true,
+        kingdom_text: false,
+        show_journey: false,
         show_repeat:  true,
-        sticky_table_rules: true,
+        sticky_table_rules: false,
         previous_rules: {},
         redraw_frequency: 5000
     },
@@ -196,7 +196,7 @@ KC = {
         if (card_list && card_list.length > 0) {
             var display_area = $('<div class="game-area modded-game-area" style="left:13%; right:25%; z-index:10000; overflow-y: auto; background-color: black;" />');
             $('.game-page>div').append(display_area);
-            var card_width = (display_area.width() - (padding * (1 + horizontal_card_count))) / horizontal_card_count;
+            var card_width = (display_area.width() - (padding * (2 + horizontal_card_count))) / horizontal_card_count;
             var scale = card_width / 310;
             var card_height = scale * 497;
             card_list.forEach((card, index) => {
@@ -208,12 +208,18 @@ KC = {
             });
         }
     },
+
+    name_card: function(card_name_index) {
+        angular.element($('.play-border')).scope().$parent.click({questionType: getOrdinal(QuestionTypes, QuestionTypes.WISH), answerIndex: card_name_index});
+        KC.toggle_card_list();
+    }
 };
 
 KC.initialize();
 
 function card_display(card, amount, position) {
-    return $('<div class="KC-card-display full-card unselectable" style="z-index: 1000; left: ' + position.left + 'px; top: ' + position.top + 'px; transform: scale(' + position.scale +');">' +
+    var active_selection = _.some(publicCollectors, c => c.question.is(QuestionTypes.WISH));
+    return $('<div class="KC-card-display full-card unselectable ' + (active_selection ? 'full-play-border' : '') + '" style="z-index: 1000; ' + (active_selection ? 'cursor: pointer; ' : '') + 'left: ' + position.left + 'px; top: ' + position.top + 'px; transform: scale(' + position.scale +');" ' + (active_selection ? 'onclick="KC.name_card(' + getOrdinal(CardNames, card.cardName) + ')"' : '') + '>' +
         '<div class="ng-scope">' +
             '<div class="full-card-template" style="background-image: url(' + card.fullView.templateURL + ')" />' +
             '<div class="full-card-art" style="background-image: url(' + card.fullView.artURL + '); top: ' + card.fullView.artTopOffsetInPercent + '%;" />' +
@@ -238,6 +244,8 @@ function card_display(card, amount, position) {
         card_count(amount) +
     '</div>');
 }
+
+
 
 function coin_production(card) {
     var res = '';
