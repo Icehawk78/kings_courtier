@@ -1,6 +1,8 @@
 {
   "manifest_version": 2,
   "name": "King's Courtier",
+  "short_name": "King's Courtier",
+  "description": "An extension for Dominion Online",
   "version": "0.5",
   "content_scripts": [
     {
