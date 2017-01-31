@@ -48,16 +48,15 @@ KC = {
     },
 
     replace_kingdom_text: function () {
+        $('.modded-text-overlay').remove();
         if (KC.config.kingdom_text) {
-            $('.modded-text-overlay').remove();
-
             $('[type="kingdom"]>.mini-card-art').css('background-color', 'white').css('background-image', '').toArray().forEach(e => {
                 var a = $('<div class="modded-text-overlay" style="z-index: 100; position: absolute; left: 3%; top: 5%; min-width: 287px; text-align: center; min-height: 170px;">');
                 a.append(KC.card_text(angular.element(e).scope().pile.topCard));
                 $(e).append(a);
             });
         } else if (KC.updated.kingdom_text) {
-            $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => $(e).css('background-image', getMiniArtURL(angular.element(e).scope().pile.topCardName)));
+            $('[type="kingdom"]>.mini-card-art').css('background-color', 'black').toArray().forEach(e => $(e).css('background-image', 'URL(' + getMiniArtURL(angular.element(e).scope().pile.topCardName) + ')'));
             KC.updated.kingdom_text = false;
         }
     },
@@ -100,6 +99,16 @@ KC = {
         }
     },
 
+    display_kingdom_button: function() {
+        if ($('.base-hero-bar .opponent-name-counter-pane').length > 0) {
+            $('.kc-kingdom-toggle').remove();
+            var kingdom_button = $('<button class="end-actions-button kc-kingdom-toggle" style="position: absolute; width: 92%; font-size: 2.4vh;" onclick="KC.toggle_card_list()">Kingdom</button>');
+            $('.base-hero-bar .opponent-name-counter-pane').before(kingdom_button);
+            var top = $('.base-hero-bar .opponent-name-counter-pane').offset().top - 20 - kingdom_button.outerHeight();
+            kingdom_button.css('top', top + 'px');
+        }
+    },
+
     display_repeat_button: function() {
         if (KC.config.show_repeat) {
             if ($('score-table-buttons').length > 0) {
@@ -138,11 +147,12 @@ KC = {
         if (activeGame._isActive) {
             KC.replace_kingdom_text();
             KC.display_journey_token();
+            KC.display_kingdom_button();
         } else if (publicTableService && publicTableService.heroIsHost()) {
             KC.set_table_rules();
             KC.display_repeat_button();
         }
-        setTimeout(KC.redraw, KC.config.redraw_frequency);
+        KC.timeout = setTimeout(KC.redraw, KC.config.redraw_frequency);
     },
 
     card_lists: function() {
@@ -167,13 +177,39 @@ KC = {
             t = setTopOffset(t, getDefaultTopOffset(n))
         }
         return t;
-    }
+    },
+
+    toggle_card_list: function(card_list) {
+        var horizontal_card_count = 5;
+        var padding = 20;
+        if ($('.modded-game-area').length > 0) {
+            $('.modded-game-area').remove();
+        } else {
+            if (!card_list) {
+                card_list = _.sortBy(activeGame.state.cardNames.filter(c => !c.isBaseCard()), c => c.cost.effectiveCoinCost).map(c => new SingleCard(c));
+            }
+        }
+        if (card_list && card_list.length > 0) {
+            var display_area = $('<div class="game-area modded-game-area" style="left:13%; right:25%; z-index:10000; overflow-y: auto; background-color: black;" />');
+            $('.game-page>div').append(display_area);
+            var card_width = (display_area.width() - (padding * (1 + horizontal_card_count))) / horizontal_card_count;
+            var scale = card_width / 310;
+            var card_height = scale * 497;
+            card_list.forEach((card, index) => {
+                var col = index % horizontal_card_count;
+                var row = parseInt(index / horizontal_card_count);
+                var left = padding + (col * (card_width + padding));
+                var top = padding + (row * (card_height + padding));
+                display_area.append(card_display(card, -1, {left: left, top: top, scale: scale}));
+            });
+        }
+    },
 };
 
 KC.initialize();
 
 function card_display(card, amount, position) {
-    return '<div class="KC-card-display full-card unselectable" style="z-index: 1000; left: ' + position.left + 'px; top: ' + position.top + 'px; transform: scale(' + position.scale +');">' +
+    return $('<div class="KC-card-display full-card unselectable" style="z-index: 1000; left: ' + position.left + 'px; top: ' + position.top + 'px; transform: scale(' + position.scale +');">' +
         '<div class="ng-scope">' +
             '<div class="full-card-template" style="background-image: url(' + card.fullView.templateURL + ')" />' +
             '<div class="full-card-art" style="background-image: url(' + card.fullView.artURL + '); top: ' + card.fullView.artTopOffsetInPercent + '%;" />' +
@@ -182,7 +218,7 @@ function card_display(card, amount, position) {
                 '<div class="card-name unselectable" style="font-size: ' + card.fullView.titleFontSize + 'em;">' + card.cardName.name + '</div>' +
             '</div>' +
             '<div class="card-text-container">' +
-                card_text(card.cardName) +
+                card_text(card) +
             '</div>' +
             '<div class="bottom-bar-full" style="width: ' + card.fullView.bottomBarWidthPercentage + '%; bottom: ' + card.fullView.bottomBarBottomOffset + 'px;">' +
                 '<div class="cost-container-full">' +
@@ -195,16 +231,13 @@ function card_display(card, amount, position) {
             '</div>' +
         '</div>' +
         '<div class="full-card-border" />' +
-        '<div class="new-card-counter-container" style="top:0px; left:0px;">' +
-            '<div class="new-card-counter-text-container" style="top: 50%">' +
-                '<div class="new-card-counter-text" style="left: -50%">' + amount + '</div>' +
-            '</div>' +
-        '</div>';
+        card_count(amount) +
+    '</div>');
 }
 
 function coin_production(card) {
     var res = '';
-    if (card.cardName.isTreasure()) {
+    if (card.cardName.isTreasure() && card.cardName.coinProduction) {
         res = '<div class="' + coin_potion_class(card) + '-production-container">' +
             '<div class="' + coin_potion_class(card) + '-production-container">' +
                 '<div class="' + coin_potion_class(card) + '-production-left"  style="top:' + card.fullView.coinTopOffset + 'px;">' +
@@ -246,6 +279,18 @@ function vp_text(card) {
             '</div>'
     } else {
         res = '<div class="expansion-icon-bottom-full" style="background-image: url(' + card.fullView.expansionIconURL + ');"/>'
+    }
+    return res;
+}
+
+function card_count(amount) {
+    var res = '';
+    if (amount > -1) {
+        res = '<div class="new-card-counter-container" style="top:0px; left:0px;">' +
+            '<div class="new-card-counter-text-container" style="top: 50%">' +
+                '<div class="new-card-counter-text" style="left: -50%">' + amount + '</div>' +
+            '</div>' +
+        '</div>';
     }
     return res;
 }
