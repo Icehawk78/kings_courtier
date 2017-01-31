@@ -186,7 +186,11 @@ KC = {
             $('.modded-game-area').remove();
         } else {
             if (!card_list) {
-                card_list = _.sortBy(activeGame.state.cardNames.filter(c => !c.isBaseCard()), c => c.cost.effectiveCoinCost).map(c => new SingleCard(c));
+                card_list = _.chain(activeGame.state.cardNames)
+                    .uniq()
+                    .filter(c => !c.isBaseCard() && !c.isLandscape())
+                    .orderBy([c => c.isKingdomPile(), c => c.isKingdomCard(), c => c.cost.effectiveCoinCost, c => c.name], ["asc", "asc", "asc", "asc"])
+                    .map(c => new SingleCard(c)).value();
             }
         }
         if (card_list && card_list.length > 0) {
