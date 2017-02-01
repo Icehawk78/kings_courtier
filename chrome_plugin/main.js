@@ -163,8 +163,13 @@ KC = {
                     .filter(z => z.owner == p.index)
                     .flatMap(z => z.cards)
                     .map(id => activeGame.getCardNameById(id))
-                    .sortBy(c => c.name)
+                    .orderBy([c => c.types.includes(Types.VICTORY), c => c.types.includes(Types.ACTION), c => c.types.includes(Types.TREASURE), c => c.cost.effectiveCoinCost, c => c.name], ['desc', 'desc', 'desc', 'desc', 'desc'])
                     .groupBy(c => c.name)
+                    .map(groups => {
+                        var card = new SingleCard(groups[0]);
+                        card.amount = groups.length;
+                        return card;
+                    })
                     .value()
             }
         });
@@ -189,8 +194,9 @@ KC = {
                 card_list = _.chain(activeGame.state.cardNames)
                     .uniq()
                     .filter(c => !c.isBaseCard() && !c.isLandscape())
-                    .orderBy([c => c.isKingdomPile(), c => c.isKingdomCard(), c => c.cost.effectiveCoinCost, c => c.name], ["asc", "asc", "asc", "asc"])
-                    .map(c => new SingleCard(c)).value();
+                    .orderBy([c => c.isKingdomPile(), c => c.isKingdomCard(), c => c.cost.effectiveCoinCost, c => c.name], ["desc", "asc", "asc", "asc"])
+                    .map(c => new SingleCard(c))
+                    .value();
             }
         }
         if (card_list && card_list.length > 0) {
@@ -204,7 +210,7 @@ KC = {
                 var row = parseInt(index / horizontal_card_count);
                 var left = padding + (col * (card_width + padding));
                 var top = padding + (row * (card_height + padding));
-                display_area.append(card_display(card, -1, {left: left, top: top, scale: scale}));
+                display_area.append(card_display(card, (card.amount || -1), {left: left, top: top, scale: scale}));
             });
         }
     },
