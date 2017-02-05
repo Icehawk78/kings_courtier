@@ -1,4 +1,4 @@
-var BASE_URL = 'http://icehawk78.github.io/kings_courtier/chrome_plugin/';
+var BASE_URL = 'https://icehawk78.github.io/kings_courtier/chrome_plugin/';
 
 function load_scripts(script_list) {
 	var s = document.createElement('script');
