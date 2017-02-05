@@ -224,6 +224,12 @@ KC = {
     name_card: function(card_name_index) {
         angular.element($('.play-border')).scope().$parent.click({questionType: getOrdinal(QuestionTypes, QuestionTypes.WISH), answerIndex: card_name_index});
         KC.toggle_card_list();
+    },
+
+    send_chat: function(text) {
+        var c = angular.element($('.game-chat-input')).controller();
+        c.chat.message = text;
+        c.sendChat();
     }
 };
 
