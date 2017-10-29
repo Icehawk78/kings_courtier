@@ -230,10 +230,16 @@ KC = {
                     .map(c => activeGame.getCardNameById(c))
                     .uniq()
                     .value();
+                var druid_boons = _.chain(activeGame.state.zones)
+                    .filter(z => z.zoneName == ZoneNames.DRUID_BOONS)
+                    .flatMap(z => z.cards)
+                    .map(c => activeGame.getCardNameById(c))
+                    .uniq()
+                    .value();
                 card_list = _.chain(activeGame.state.cardNames)
                     .uniq()
                     .filter(c => !c.isBaseCard())
-                    .orderBy([c => supply_cards.includes(c), c => c.isKingdomCard(), c => c.isEvent(), c => c.isLandmark(), c => c.isLandscape(), c => c.cost.effectiveCoinCost, c => c.name], ["desc", "asc", "desc", "desc", "asc", "asc", "asc"])
+                    .orderBy([c => supply_cards.includes(c), c => c.isKingdomCard(), c => c.isEvent(), c => c.isLandmark(), c => druid_boons.includes(c), c => c.isLandscape(), c => c.isState(), c => c.isBoon(), c => c.isHex(), c => c.cost.effectiveCoinCost, c => c.name], ["desc", "asc", "desc", "desc", "desc", "asc", "desc", "desc", "desc", "asc", "asc"])
                     .map(c => c.isLandscape() ? new LandscapeCard(c) : new SingleCard(c))
                     .value();
             }
